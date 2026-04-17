@@ -1,12 +1,12 @@
 import { HashRouter, Navigate, Route, Routes } from 'react-router-dom';
 import { RepoProvider } from '@/data/RepoContext';
 import { Layout } from '@/ui/Layout';
-import { PageStub } from '@/ui/PageStub';
 import { DashboardPage } from '@/pages/DashboardPage';
 import { StudentsPage } from '@/pages/StudentsPage';
 import { CoursesPage } from '@/pages/CoursesPage';
 import { RegistrationsPage } from '@/pages/RegistrationsPage';
 import { PaymentsPage } from '@/pages/PaymentsPage';
+import { SchedulePage } from '@/pages/SchedulePage';
 
 export function App() {
   return (
@@ -19,10 +19,7 @@ export function App() {
             <Route path="courses" element={<CoursesPage />} />
             <Route path="registrations" element={<RegistrationsPage />} />
             <Route path="payments" element={<PaymentsPage />} />
-            <Route
-              path="schedule"
-              element={<PageStub title="Schedule" description="Calendar in Batch 5." />}
-            />
+            <Route path="schedule" element={<SchedulePage />} />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Route>
         </Routes>

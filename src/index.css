@@ -9,3 +9,46 @@
     height: 100%;
   }
 }
+
+.dark .rbc-calendar,
+.dark .rbc-month-view,
+.dark .rbc-time-view,
+.dark .rbc-agenda-view {
+  color: theme('colors.slate.200');
+  background-color: transparent;
+}
+.dark .rbc-header,
+.dark .rbc-time-header-content,
+.dark .rbc-time-header-cell,
+.dark .rbc-toolbar button {
+  color: theme('colors.slate.200');
+}
+.dark .rbc-toolbar button {
+  background-color: theme('colors.slate.800');
+  border-color: theme('colors.slate.700');
+}
+.dark .rbc-toolbar button:hover,
+.dark .rbc-toolbar button.rbc-active {
+  background-color: theme('colors.slate.700');
+  color: theme('colors.slate.100');
+}
+.dark .rbc-off-range-bg {
+  background-color: theme('colors.slate.900');
+}
+.dark .rbc-today {
+  background-color: theme('colors.brand.900' / 30%);
+}
+.dark .rbc-day-bg + .rbc-day-bg,
+.dark .rbc-header + .rbc-header,
+.dark .rbc-month-row + .rbc-month-row,
+.dark .rbc-time-content,
+.dark .rbc-time-view,
+.dark .rbc-month-view,
+.dark .rbc-agenda-view table.rbc-agenda-table,
+.dark .rbc-time-header.rbc-overflowing,
+.dark .rbc-time-header-content {
+  border-color: theme('colors.slate.800');
+}
+.dark .rbc-agenda-view table.rbc-agenda-table tbody > tr > td {
+  border-color: theme('colors.slate.800');
+}
