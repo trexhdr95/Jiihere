@@ -1,4 +1,5 @@
 import type { Repo } from './repo';
+import { applyCourseSessions } from '@/features/courses/courseService';
 
 export async function seedDemoData(repo: Repo): Promise<void> {
   await repo.reset();
@@ -59,4 +60,7 @@ export async function seedDemoData(repo: Repo): Promise<void> {
     isPaid: false,
     registrationDate: today.toISOString().slice(0, 10),
   });
+
+  await applyCourseSessions(repo, group);
+  await applyCourseSessions(repo, priv);
 }
