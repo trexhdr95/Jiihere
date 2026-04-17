@@ -5,6 +5,8 @@ import { PageStub } from '@/ui/PageStub';
 import { DashboardPage } from '@/pages/DashboardPage';
 import { StudentsPage } from '@/pages/StudentsPage';
 import { CoursesPage } from '@/pages/CoursesPage';
+import { RegistrationsPage } from '@/pages/RegistrationsPage';
+import { PaymentsPage } from '@/pages/PaymentsPage';
 
 export function App() {
   return (
@@ -15,16 +17,8 @@ export function App() {
             <Route index element={<DashboardPage />} />
             <Route path="students" element={<StudentsPage />} />
             <Route path="courses" element={<CoursesPage />} />
-            <Route
-              path="registrations"
-              element={
-                <PageStub title="Registrations" description="Enroll + payments in Batch 4." />
-              }
-            />
-            <Route
-              path="payments"
-              element={<PageStub title="Payments" description="Ledger view in Batch 4." />}
-            />
+            <Route path="registrations" element={<RegistrationsPage />} />
+            <Route path="payments" element={<PaymentsPage />} />
             <Route
               path="schedule"
               element={<PageStub title="Schedule" description="Calendar in Batch 5." />}
