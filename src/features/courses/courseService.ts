@@ -5,6 +5,7 @@ import { reconcileSessions } from './sessionGenerator';
 export async function applyCourseSessions(repo: Repo, course: Course): Promise<{
   created: number;
   removed: number;
+  updated: number;
   kept: number;
 }> {
   const allSessions = await repo.sessions.list();
@@ -13,6 +14,12 @@ export async function applyCourseSessions(repo: Repo, course: Course): Promise<{
 
   for (const id of plan.toRemoveIds) {
     await repo.sessions.remove(id);
+  }
+  for (const u of plan.toUpdate) {
+    await repo.sessions.update(u.id, {
+      startTime: u.startTime,
+      durationMin: u.durationMin,
+    });
   }
   for (const p of plan.toCreate) {
     await repo.sessions.create({
@@ -26,6 +33,7 @@ export async function applyCourseSessions(repo: Repo, course: Course): Promise<{
   return {
     created: plan.toCreate.length,
     removed: plan.toRemoveIds.length,
+    updated: plan.toUpdate.length,
     kept: plan.kept.length,
   };
 }

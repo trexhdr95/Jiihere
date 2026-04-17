@@ -37,6 +37,18 @@ export function DashboardPage() {
     void refresh();
   }, [refresh]);
 
+  useEffect(() => {
+    const onVisible = () => {
+      if (document.visibilityState === 'visible') void refresh();
+    };
+    window.addEventListener('focus', onVisible);
+    document.addEventListener('visibilitychange', onVisible);
+    return () => {
+      window.removeEventListener('focus', onVisible);
+      document.removeEventListener('visibilitychange', onVisible);
+    };
+  }, [refresh]);
+
   const chartSeries = useMemo(() => {
     if (!stats || !currency) return [];
     return monthlyRevenueSeries({ payments: stats.payments, currency, months });

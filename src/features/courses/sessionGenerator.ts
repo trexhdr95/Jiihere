@@ -50,9 +50,16 @@ export function planSessions(course: Pick<Course, 'startDate' | 'endDate' | 'day
   return out;
 }
 
+export interface SessionUpdate {
+  id: string;
+  startTime: string;
+  durationMin: number;
+}
+
 export interface ReconcileResult {
   toCreate: PlannedSession[];
   toRemoveIds: string[];
+  toUpdate: SessionUpdate[];
   kept: Session[];
 }
 
@@ -69,6 +76,7 @@ export function reconcileSessions(params: {
   const plannedByDate = new Map(planned.map((p) => [p.date, p]));
 
   const toRemoveIds: string[] = [];
+  const toUpdate: SessionUpdate[] = [];
   const kept: Session[] = [];
   const existingDates = new Set<string>();
 
@@ -80,6 +88,20 @@ export function reconcileSessions(params: {
     if (stillPlanned) {
       kept.push(s);
       existingDates.add(s.date);
+      // Propagate new startTime/duration only to still-scheduled future sessions.
+      // Past or finalised sessions keep their historical values.
+      if (!isPast && !isFinalState) {
+        if (
+          s.startTime !== course.startTime ||
+          s.durationMin !== course.defaultDurationMin
+        ) {
+          toUpdate.push({
+            id: s.id,
+            startTime: course.startTime,
+            durationMin: course.defaultDurationMin,
+          });
+        }
+      }
       continue;
     }
 
@@ -93,7 +115,7 @@ export function reconcileSessions(params: {
   }
 
   const toCreate = planned.filter((p) => !existingDates.has(p.date));
-  return { toCreate, toRemoveIds, kept };
+  return { toCreate, toRemoveIds, toUpdate, kept };
 }
 
 export const KNOWN_DAYS = DAYS_OF_WEEK;

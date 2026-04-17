@@ -2,6 +2,11 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useRepo } from '@/data/RepoContext';
 import type { Student } from '@/domain/types';
 import { StudentForm, type StudentFormValues } from '@/features/students/StudentForm';
+import {
+  cascadeDeleteStudent,
+  countStudentRelated,
+  type StudentRelatedCounts,
+} from '@/features/students/studentService';
 import { StudentsTable } from '@/features/students/StudentsTable';
 import { Button } from '@/ui/primitives/Button';
 import { ConfirmDialog } from '@/ui/primitives/ConfirmDialog';
@@ -10,13 +15,14 @@ import { Modal } from '@/ui/primitives/Modal';
 import { useNewShortcut } from '@/ui/ShortcutsProvider';
 
 type Mode = { kind: 'closed' } | { kind: 'create' } | { kind: 'edit'; student: Student };
+type DeleteState = { student: Student; counts: StudentRelatedCounts } | null;
 
 export function StudentsPage() {
   const repo = useRepo();
   const [students, setStudents] = useState<Student[] | null>(null);
   const [search, setSearch] = useState('');
   const [mode, setMode] = useState<Mode>({ kind: 'closed' });
-  const [confirm, setConfirm] = useState<Student | null>(null);
+  const [confirm, setConfirm] = useState<DeleteState>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -59,12 +65,22 @@ export function StudentsPage() {
     }
   };
 
+  const openDelete = async (student: Student) => {
+    setError(null);
+    try {
+      const counts = await countStudentRelated(repo, student.id);
+      setConfirm({ student, counts });
+    } catch (err) {
+      setError((err as Error).message);
+    }
+  };
+
   const handleDelete = async () => {
     if (!confirm) return;
     setBusy(true);
     setError(null);
     try {
-      await repo.students.remove(confirm.id);
+      await cascadeDeleteStudent(repo, confirm.student.id);
       setConfirm(null);
       await load();
     } catch (err) {
@@ -123,7 +139,7 @@ export function StudentsPage() {
           <StudentsTable
             students={filtered}
             onEdit={(s) => setMode({ kind: 'edit', student: s })}
-            onDelete={(s) => setConfirm(s)}
+            onDelete={(s) => void openDelete(s)}
           />
         )}
       </div>
@@ -142,10 +158,10 @@ export function StudentsPage() {
         title="Delete student?"
         message={
           confirm
-            ? `${confirm.name} will be removed. Existing registrations, payments, and attendance still reference this ID — clean those up separately if needed.`
+            ? `This will delete "${confirm.student.name}" and cascade: ${confirm.counts.registrations} registration(s), ${confirm.counts.payments} payment(s), ${confirm.counts.attendance} attendance record(s). This cannot be undone.`
             : ''
         }
-        confirmLabel="Delete"
+        confirmLabel="Delete student"
         destructive
         busy={busy}
         onConfirm={handleDelete}

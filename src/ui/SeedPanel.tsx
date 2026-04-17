@@ -6,6 +6,10 @@ import {
   downloadBackup,
   validateBackup,
 } from '@/data/backup';
+import {
+  summarizeIntegrityIssues,
+  validateBackupIntegrity,
+} from '@/data/backupIntegrity';
 import { seedDemoData } from '@/data/seed';
 
 export function SeedPanel({ onChanged }: { onChanged?: () => void | Promise<void> }) {
@@ -56,6 +60,12 @@ export function SeedPanel({ onChanged }: { onChanged?: () => void | Promise<void
     try {
       const text = await file.text();
       const backup = validateBackup(JSON.parse(text));
+      const issues = validateBackupIntegrity(backup);
+      if (issues.length > 0) {
+        throw new Error(
+          `Backup has ${issues.length} referential issue(s): ${summarizeIntegrityIssues(issues)}`,
+        );
+      }
       await applyBackup(repo, backup);
       const counts = Object.entries(backup.data)
         .map(([k, arr]) => `${k}: ${(arr as unknown[]).length}`)

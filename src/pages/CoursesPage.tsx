@@ -75,7 +75,7 @@ export function CoursesPage() {
       const result = await applyCourseSessions(repo, course);
       setMode({ kind: 'closed' });
       setNotice(
-        `Saved. Sessions: +${result.created} created, −${result.removed} removed, ${result.kept} kept.`,
+        `Saved. Sessions: +${result.created} created, ~${result.updated} updated, −${result.removed} removed, ${result.kept} kept.`,
       );
       await load();
     } catch (err) {
@@ -92,7 +92,7 @@ export function CoursesPage() {
     try {
       const result = await applyCourseSessions(repo, course);
       setNotice(
-        `${course.name}: +${result.created} created, −${result.removed} removed, ${result.kept} kept.`,
+        `${course.name}: +${result.created} created, ~${result.updated} updated, −${result.removed} removed, ${result.kept} kept.`,
       );
       await load();
     } catch (err) {
