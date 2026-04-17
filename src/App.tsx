@@ -3,6 +3,7 @@ import { RepoProvider } from '@/data/RepoContext';
 import { Layout } from '@/ui/Layout';
 import { PageStub } from '@/ui/PageStub';
 import { DashboardPage } from '@/pages/DashboardPage';
+import { StudentsPage } from '@/pages/StudentsPage';
 
 export function App() {
   return (
@@ -11,10 +12,7 @@ export function App() {
         <Routes>
           <Route element={<Layout />}>
             <Route index element={<DashboardPage />} />
-            <Route
-              path="students"
-              element={<PageStub title="Students" description="CRUD coming in Batch 2." />}
-            />
+            <Route path="students" element={<StudentsPage />} />
             <Route
               path="courses"
               element={<PageStub title="Courses" description="CRUD + auto sessions in Batch 3." />}
