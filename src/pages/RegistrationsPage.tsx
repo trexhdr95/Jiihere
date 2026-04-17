@@ -13,6 +13,7 @@ import { Button } from '@/ui/primitives/Button';
 import { ConfirmDialog } from '@/ui/primitives/ConfirmDialog';
 import { EmptyState } from '@/ui/primitives/EmptyState';
 import { Modal } from '@/ui/primitives/Modal';
+import { useNewShortcut } from '@/ui/ShortcutsProvider';
 import { formatDate, formatMoney } from '@/lib/format';
 
 type Mode =
@@ -57,6 +58,8 @@ export function RegistrationsPage() {
   useEffect(() => {
     void load();
   }, [load]);
+
+  useNewShortcut(() => setMode({ kind: 'create' }));
 
   const existingRegistrations = useMemo(
     () => (rows ?? []).map((r) => r.registration),

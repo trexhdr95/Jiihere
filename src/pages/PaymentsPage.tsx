@@ -12,6 +12,7 @@ import { Button } from '@/ui/primitives/Button';
 import { ConfirmDialog } from '@/ui/primitives/ConfirmDialog';
 import { EmptyState } from '@/ui/primitives/EmptyState';
 import { Modal } from '@/ui/primitives/Modal';
+import { useNewShortcut } from '@/ui/ShortcutsProvider';
 
 type Mode = { kind: 'closed' } | { kind: 'create' } | { kind: 'edit'; payment: Payment };
 
@@ -45,6 +46,10 @@ export function PaymentsPage() {
   useEffect(() => {
     void load();
   }, [load]);
+
+  useNewShortcut(() => {
+    if (registrations.length > 0) setMode({ kind: 'create' });
+  });
 
   const filtered = useMemo(() => {
     if (!rows) return [];

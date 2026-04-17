@@ -13,6 +13,7 @@ import { Button } from '@/ui/primitives/Button';
 import { ConfirmDialog } from '@/ui/primitives/ConfirmDialog';
 import { EmptyState } from '@/ui/primitives/EmptyState';
 import { Modal } from '@/ui/primitives/Modal';
+import { useNewShortcut } from '@/ui/ShortcutsProvider';
 
 type Mode = { kind: 'closed' } | { kind: 'create' } | { kind: 'edit'; course: Course };
 type DeleteState = { course: Course; counts: CourseRelatedCounts } | null;
@@ -54,6 +55,8 @@ export function CoursesPage() {
   useEffect(() => {
     void load();
   }, [load]);
+
+  useNewShortcut(() => setMode({ kind: 'create' }));
 
   const sortedCourses = useMemo(() => courses ?? [], [courses]);
 

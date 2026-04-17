@@ -7,6 +7,7 @@ import { Button } from '@/ui/primitives/Button';
 import { ConfirmDialog } from '@/ui/primitives/ConfirmDialog';
 import { EmptyState } from '@/ui/primitives/EmptyState';
 import { Modal } from '@/ui/primitives/Modal';
+import { useNewShortcut } from '@/ui/ShortcutsProvider';
 
 type Mode = { kind: 'closed' } | { kind: 'create' } | { kind: 'edit'; student: Student };
 
@@ -28,6 +29,8 @@ export function StudentsPage() {
   useEffect(() => {
     void load();
   }, [load]);
+
+  useNewShortcut(() => setMode({ kind: 'create' }));
 
   const filtered = useMemo(() => {
     if (!students) return [];
