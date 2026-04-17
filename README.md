@@ -18,10 +18,12 @@ payments, and class scheduling. Single-user for now; multi-user ready.
 
 ```bash
 npm install
-npm run dev      # start Vite dev server
-npm run build    # typecheck + production build
-npm run preview  # serve the production build locally
-npm run lint     # typecheck only
+npm run dev         # start Vite dev server
+npm run build       # typecheck + production build
+npm run preview     # serve the production build locally
+npm run lint        # typecheck only
+npm test            # run vitest suite once
+npm run test:watch  # run vitest in watch mode
 ```
 
 ## Build batches
