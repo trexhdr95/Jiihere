@@ -1,26 +1,48 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useRepo } from '@/data/RepoContext';
+import type { Currency } from '@/domain/types';
 import {
   formatUpcomingDate,
   loadDashboardStats,
   type DashboardStats,
 } from '@/features/dashboard/stats';
+import { RevenueChart } from '@/features/dashboard/RevenueChart';
+import { monthlyRevenueSeries, totalFromSeries } from '@/features/dashboard/revenue';
 import { colorForCourse } from '@/features/schedule/courseColor';
 import { formatMoney, formatTime } from '@/lib/format';
 import { SeedPanel } from '@/ui/SeedPanel';
 
+const WINDOWS = [
+  { label: '6m', months: 6 },
+  { label: '12m', months: 12 },
+] as const;
+
 export function DashboardPage() {
   const repo = useRepo();
   const [stats, setStats] = useState<DashboardStats | null>(null);
+  const [currency, setCurrency] = useState<Currency | null>(null);
+  const [months, setMonths] = useState<6 | 12>(12);
 
   const refresh = useCallback(async () => {
-    setStats(await loadDashboardStats(repo));
+    const next = await loadDashboardStats(repo);
+    setStats(next);
+    setCurrency((prev) => {
+      if (prev && next.currenciesInUse.includes(prev)) return prev;
+      return next.currenciesInUse[0] ?? 'USD';
+    });
   }, [repo]);
 
   useEffect(() => {
     void refresh();
   }, [refresh]);
+
+  const chartSeries = useMemo(() => {
+    if (!stats || !currency) return [];
+    return monthlyRevenueSeries({ payments: stats.payments, currency, months });
+  }, [stats, currency, months]);
+
+  const windowTotal = useMemo(() => totalFromSeries(chartSeries), [chartSeries]);
 
   if (!stats) {
     return (
@@ -44,6 +66,9 @@ export function DashboardPage() {
     { label: 'Sessions this week', value: String(stats.sessionsThisWeek), to: '/schedule' },
     { label: 'Revenue (paid)', value: revenueLabel, to: '/payments' },
   ];
+
+  const currencies = stats.currenciesInUse.length > 0 ? stats.currenciesInUse : (['USD'] as Currency[]);
+  const activeCurrency = currency ?? currencies[0];
 
   return (
     <div>
@@ -84,6 +109,51 @@ export function DashboardPage() {
           ))}
         </div>
       )}
+
+      <section className="mt-6 rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900">
+        <header className="flex items-center justify-between gap-3 flex-wrap px-4 py-3 border-b border-slate-200 dark:border-slate-800">
+          <div>
+            <h2 className="text-sm font-semibold">Revenue by month</h2>
+            <div className="mt-0.5 text-xs text-slate-500">
+              {months}-month window ·{' '}
+              {formatMoney({ amount: windowTotal, currency: activeCurrency })} total
+            </div>
+          </div>
+          <div className="flex items-center gap-2">
+            {currencies.length > 1 && (
+              <select
+                value={activeCurrency}
+                onChange={(e) => setCurrency(e.target.value as Currency)}
+                className="rounded-md border border-slate-300 bg-white px-2 py-1 text-xs shadow-sm dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
+              >
+                {currencies.map((c) => (
+                  <option key={c} value={c}>
+                    {c}
+                  </option>
+                ))}
+              </select>
+            )}
+            <div className="inline-flex rounded-md border border-slate-200 dark:border-slate-700 p-0.5 bg-white dark:bg-slate-900">
+              {WINDOWS.map((w) => (
+                <button
+                  key={w.label}
+                  onClick={() => setMonths(w.months as 6 | 12)}
+                  className={`px-2 py-0.5 text-xs font-medium rounded ${
+                    months === w.months
+                      ? 'bg-brand-600 text-white'
+                      : 'text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800'
+                  }`}
+                >
+                  {w.label}
+                </button>
+              ))}
+            </div>
+          </div>
+        </header>
+        <div className="p-4">
+          <RevenueChart series={chartSeries} currency={activeCurrency} />
+        </div>
+      </section>
 
       <div className="mt-8 grid grid-cols-1 lg:grid-cols-2 gap-4">
         <section className="rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900">

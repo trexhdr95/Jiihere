@@ -23,6 +23,8 @@ export interface DashboardStats {
   revenue: Money[];
   upcoming: UpcomingSession[];
   unpaid: RegistrationView[];
+  payments: Payment[];
+  currenciesInUse: Currency[];
 }
 
 function startOfWeekMonday(d: Date): Date {
@@ -93,13 +95,18 @@ export async function loadDashboardStats(repo: Repo): Promise<DashboardStats> {
     })
     .slice(0, 5);
 
+  const revenue = sumRevenue(payments);
+  const currenciesInUse = revenue.map((m) => m.currency);
+
   return {
     totalStudents: students.length,
     activeCourses: courses.filter((c) => c.status === 'active').length,
     sessionsThisWeek,
-    revenue: sumRevenue(payments),
+    revenue,
     upcoming,
     unpaid,
+    payments,
+    currenciesInUse,
   };
 }
 
