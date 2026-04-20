@@ -80,7 +80,7 @@ export function SeedPanel({ onChanged }: { onChanged?: () => void | Promise<void
   };
 
   return (
-    <div className="rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-4">
+    <div className="rounded-lg border border-slate-200 bg-white p-4">
       <div className="flex items-start justify-between gap-4 flex-wrap">
         <div>
           <div className="font-medium">Dev tools</div>
@@ -99,21 +99,21 @@ export function SeedPanel({ onChanged }: { onChanged?: () => void | Promise<void
           <button
             onClick={() => void handleExport()}
             disabled={busy}
-            className="rounded-md bg-slate-200 hover:bg-slate-300 dark:bg-slate-800 dark:hover:bg-slate-700 text-sm font-medium px-3 py-1.5 disabled:opacity-50"
+            className="rounded-md bg-slate-200 hover:bg-slate-300 text-sm font-medium px-3 py-1.5 disabled:opacity-50"
           >
             Export JSON
           </button>
           <button
             onClick={handleImportClick}
             disabled={busy}
-            className="rounded-md bg-slate-200 hover:bg-slate-300 dark:bg-slate-800 dark:hover:bg-slate-700 text-sm font-medium px-3 py-1.5 disabled:opacity-50"
+            className="rounded-md bg-slate-200 hover:bg-slate-300 text-sm font-medium px-3 py-1.5 disabled:opacity-50"
           >
             Import JSON
           </button>
           <button
             onClick={() => void run(() => repo.reset(), 'Reset')}
             disabled={busy}
-            className="rounded-md bg-slate-200 hover:bg-slate-300 dark:bg-slate-800 dark:hover:bg-slate-700 text-sm font-medium px-3 py-1.5 disabled:opacity-50"
+            className="rounded-md bg-slate-200 hover:bg-slate-300 text-sm font-medium px-3 py-1.5 disabled:opacity-50"
           >
             Reset all
           </button>
@@ -127,9 +127,9 @@ export function SeedPanel({ onChanged }: { onChanged?: () => void | Promise<void
         onChange={(e) => void handleFileChange(e)}
       />
       {msg && !error && (
-        <div className="mt-3 text-sm text-brand-700 dark:text-brand-300">{msg}</div>
+        <div className="mt-3 text-sm text-brand-700">{msg}</div>
       )}
-      {error && <div className="mt-3 text-sm text-red-600 dark:text-red-400">{error}</div>}
+      {error && <div className="mt-3 text-sm text-red-600">{error}</div>}
       <div className="mt-3 text-xs text-slate-500">
         Import replaces all existing data. Export first if you want to keep it.
       </div>

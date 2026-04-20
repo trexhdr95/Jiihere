@@ -8,47 +8,50 @@
   #root {
     height: 100%;
   }
+  body {
+    background-color: theme('colors.slate.50');
+    color: theme('colors.slate.900');
+  }
 }
 
-.dark .rbc-calendar,
-.dark .rbc-month-view,
-.dark .rbc-time-view,
-.dark .rbc-agenda-view {
-  color: theme('colors.slate.200');
-  background-color: transparent;
+/* React-Big-Calendar: tint "today" with brand blue + gold top accent. */
+.rbc-today {
+  background-color: theme('colors.brand.50') !important;
+  box-shadow: inset 0 3px 0 theme('colors.accent.400');
 }
-.dark .rbc-header,
-.dark .rbc-time-header-content,
-.dark .rbc-time-header-cell,
-.dark .rbc-toolbar button {
-  color: theme('colors.slate.200');
+.rbc-toolbar button.rbc-active {
+  background-color: theme('colors.brand.600') !important;
+  color: white !important;
+  border-color: theme('colors.brand.600') !important;
 }
-.dark .rbc-toolbar button {
-  background-color: theme('colors.slate.800');
-  border-color: theme('colors.slate.700');
+
+/* Constrain the Agenda view's table so the Event column doesn't push off
+   screen at narrow widths. The library defaults to auto-layout which lets
+   "IELTS Prep - Weekend" decide its own 150 px min-width. */
+.rbc-agenda-view table.rbc-agenda-table {
+  table-layout: fixed;
+  width: 100%;
 }
-.dark .rbc-toolbar button:hover,
-.dark .rbc-toolbar button.rbc-active {
-  background-color: theme('colors.slate.700');
-  color: theme('colors.slate.100');
+.rbc-agenda-view table.rbc-agenda-table .rbc-agenda-date-cell,
+.rbc-agenda-view table.rbc-agenda-table .rbc-agenda-time-cell {
+  width: 28%;
+  white-space: normal;
+  word-break: normal;
 }
-.dark .rbc-off-range-bg {
-  background-color: theme('colors.slate.900');
+.rbc-agenda-view table.rbc-agenda-table .rbc-agenda-event-cell {
+  width: 44%;
 }
-.dark .rbc-today {
-  background-color: theme('colors.brand.900' / 30%);
+.rbc-agenda-view table.rbc-agenda-table .rbc-agenda-event-cell > * {
+  white-space: normal;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
-.dark .rbc-day-bg + .rbc-day-bg,
-.dark .rbc-header + .rbc-header,
-.dark .rbc-month-row + .rbc-month-row,
-.dark .rbc-time-content,
-.dark .rbc-time-view,
-.dark .rbc-month-view,
-.dark .rbc-agenda-view table.rbc-agenda-table,
-.dark .rbc-time-header.rbc-overflowing,
-.dark .rbc-time-header-content {
-  border-color: theme('colors.slate.800');
-}
-.dark .rbc-agenda-view table.rbc-agenda-table tbody > tr > td {
-  border-color: theme('colors.slate.800');
+@media (min-width: 640px) {
+  .rbc-agenda-view table.rbc-agenda-table .rbc-agenda-date-cell,
+  .rbc-agenda-view table.rbc-agenda-table .rbc-agenda-time-cell {
+    width: 20%;
+  }
+  .rbc-agenda-view table.rbc-agenda-table .rbc-agenda-event-cell {
+    width: 60%;
+  }
 }

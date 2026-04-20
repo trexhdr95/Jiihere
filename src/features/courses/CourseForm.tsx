@@ -5,7 +5,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import type { Course, DayOfWeek } from '@/domain/types';
 import { DAYS_OF_WEEK } from '@/domain/types';
 import { Button } from '@/ui/primitives/Button';
-import { Input, Select } from '@/ui/primitives/Input';
+import { Input, Select, Textarea } from '@/ui/primitives/Input';
 
 const CURRENCIES = ['USD', 'EUR', 'GBP', 'SAR', 'AED'] as const;
 
@@ -87,7 +87,6 @@ export function CourseForm({ initial, busy, onSubmit, onCancel }: CourseFormProp
       <Input
         label="Course name"
         placeholder="English B1 - Evening"
-        autoFocus
         error={errors.name?.message}
         {...register('name')}
       />
@@ -119,7 +118,7 @@ export function CourseForm({ initial, busy, onSubmit, onCancel }: CourseFormProp
       </div>
 
       <div>
-        <span className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">
+        <span className="block text-xs font-medium text-slate-700 mb-1">
           Days of week
         </span>
         <Controller
@@ -144,7 +143,7 @@ export function CourseForm({ initial, busy, onSubmit, onCancel }: CourseFormProp
                       className={`rounded-md px-3 py-1.5 text-sm font-medium border transition ${
                         active
                           ? 'bg-brand-600 border-brand-600 text-white'
-                          : 'bg-white dark:bg-slate-900 border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800'
+                          : 'bg-white border-slate-300 text-slate-700 hover:bg-slate-50'
                       }`}
                     >
                       {day}
@@ -201,7 +200,7 @@ export function CourseForm({ initial, busy, onSubmit, onCancel }: CourseFormProp
         </Select>
       </div>
 
-      <Input
+      <Textarea
         label="Notes"
         placeholder="Optional"
         error={errors.notes?.message}

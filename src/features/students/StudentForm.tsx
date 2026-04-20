@@ -3,19 +3,37 @@ import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import type { Student } from '@/domain/types';
-import { Input, Select } from '@/ui/primitives/Input';
+import { PAYMENT_METHOD_LABEL, PAYMENT_METHODS } from '@/domain/types';
+import { Input, Select, Textarea } from '@/ui/primitives/Input';
 import { Button } from '@/ui/primitives/Button';
 
 const emptyToUndef = (v: unknown) =>
   typeof v === 'string' && v.trim() === '' ? undefined : v;
 
+// Name and Phone are the only required fields. Everything else (email, notes,
+// preferred payment method) is optional.
 const schema = z.object({
   name: z.string().trim().min(1, 'Name is required').max(120),
+  phone: z
+    .string()
+    .trim()
+    .min(3, 'Phone is required')
+    .max(40, 'Phone is too long'),
   email: z.preprocess(emptyToUndef, z.string().email('Invalid email').optional()),
-  phone: z.preprocess(emptyToUndef, z.string().max(40).optional()),
   preferredPaymentMethod: z.preprocess(
     emptyToUndef,
-    z.enum(['cash', 'card', 'bank_transfer', 'other']).optional(),
+    z
+      .enum([
+        'cash',
+        'card',
+        'bank_transfer',
+        'whish',
+        'omt',
+        'western_union',
+        'ltn',
+        'other',
+      ])
+      .optional(),
   ),
   notes: z.preprocess(emptyToUndef, z.string().max(1000).optional()),
 });
@@ -68,39 +86,40 @@ export function StudentForm({ initial, busy, onSubmit, onCancel }: StudentFormPr
       <Input
         label="Name"
         placeholder="Full name"
-        autoFocus
+        autoComplete="name"
         error={errors.name?.message}
         {...register('name')}
       />
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <Input
-          label="Email"
-          type="email"
-          placeholder="student@example.com"
-          error={errors.email?.message}
-          {...register('email')}
-        />
-        <Input
-          label="Phone"
-          type="tel"
-          placeholder="+1 555 0100"
-          error={errors.phone?.message}
-          {...register('phone')}
-        />
-      </div>
+      <Input
+        label="Phone"
+        type="tel"
+        placeholder="+961 70 83 82 89"
+        autoComplete="tel"
+        error={errors.phone?.message}
+        {...register('phone')}
+      />
+      <Input
+        label="Email (optional)"
+        type="email"
+        placeholder="student@example.com"
+        autoComplete="email"
+        error={errors.email?.message}
+        {...register('email')}
+      />
       <Select
-        label="Preferred payment method"
+        label="Preferred payment method (optional)"
         error={errors.preferredPaymentMethod?.message}
         {...register('preferredPaymentMethod')}
       >
         <option value="">—</option>
-        <option value="cash">Cash</option>
-        <option value="card">Card</option>
-        <option value="bank_transfer">Bank transfer</option>
-        <option value="other">Other</option>
+        {PAYMENT_METHODS.map((m) => (
+          <option key={m} value={m}>
+            {PAYMENT_METHOD_LABEL[m]}
+          </option>
+        ))}
       </Select>
-      <Input
-        label="Notes"
+      <Textarea
+        label="Notes (optional)"
         placeholder="Optional"
         error={errors.notes?.message}
         {...register('notes')}

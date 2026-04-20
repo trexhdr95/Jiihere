@@ -82,16 +82,62 @@ describe('backup foreign-key integrity', () => {
     expect(validateBackupIntegrity(backup)).toEqual([]);
   });
 
-  it('applyBackup still restores malformed data unchanged (import does not silently drop rows)', async () => {
+  it('applyBackup restores structurally-valid rows even when referential integrity is broken', async () => {
+    // validateBackup enforces entity SHAPE; validateBackupIntegrity enforces
+    // REFERENCES. This test documents the boundary: a row that is well-formed
+    // but references a non-existent FK passes validateBackup and imports, so
+    // the UI can surface the integrity issues to the user separately.
     const repo = createLocalStorageRepo();
     const raw = validateBackup({
       version: BACKUP_VERSION,
       data: {
-        registrations: [{ id: 'r1', studentId: 'missing', courseId: 'missing' }],
+        registrations: [
+          {
+            id: 'r1',
+            studentId: 'missing',
+            courseId: 'missing',
+            isPaid: false,
+            registrationDate: '2025-01-01',
+            createdAt: '2025-01-01T00:00:00.000Z',
+          },
+        ],
       },
     });
     await applyBackup(repo, raw);
     const regs = await repo.registrations.list();
     expect(regs).toHaveLength(1);
+    expect(validateBackupIntegrity(raw).length).toBeGreaterThan(0);
+  });
+
+  it('validateBackup rejects entity rows missing required fields', () => {
+    expect(() =>
+      validateBackup({
+        version: BACKUP_VERSION,
+        data: {
+          registrations: [{ id: 'r1', studentId: 'missing', courseId: 'missing' }],
+        },
+      }),
+    ).toThrow(/entity shape errors/);
+  });
+
+  it('validateBackup rejects injected/invalid field values (e.g. bad currency)', () => {
+    expect(() =>
+      validateBackup({
+        version: BACKUP_VERSION,
+        data: {
+          payments: [
+            {
+              id: 'p1',
+              registrationId: 'r1',
+              amount: { amount: 10, currency: '<script>' },
+              method: 'cash',
+              status: 'paid',
+              paidAt: '2025-01-01',
+              createdAt: '2025-01-01T00:00:00.000Z',
+            },
+          ],
+        },
+      }),
+    ).toThrow(/entity shape errors/);
   });
 });

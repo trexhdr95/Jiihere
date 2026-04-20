@@ -135,7 +135,7 @@ export function RevenueChart({ series, currency }: RevenueChartProps) {
 
       {hover !== null && bars[hover] && (
         <div
-          className="pointer-events-none absolute -translate-x-1/2 -translate-y-full rounded-md bg-slate-900 text-white text-xs px-2 py-1 shadow-lg dark:bg-slate-100 dark:text-slate-900"
+          className="pointer-events-none absolute -translate-x-1/2 -translate-y-full rounded-md bg-slate-900 text-white text-xs px-2 py-1 shadow-lg"
           style={{
             left: `${((bars[hover].x + bars[hover].width / 2) / VIEW_WIDTH) * 100}%`,
             top: `${(bars[hover].y / VIEW_HEIGHT) * 100}%`,

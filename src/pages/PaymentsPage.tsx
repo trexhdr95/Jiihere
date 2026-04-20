@@ -8,6 +8,7 @@ import {
 } from '@/features/billing/billingService';
 import { PaymentForm, type PaymentFormValues } from '@/features/payments/PaymentForm';
 import { PaymentsTable } from '@/features/payments/PaymentsTable';
+import { reportError } from '@/lib/errors';
 import { Button } from '@/ui/primitives/Button';
 import { ConfirmDialog } from '@/ui/primitives/ConfirmDialog';
 import { EmptyState } from '@/ui/primitives/EmptyState';
@@ -76,22 +77,47 @@ export function PaymentsPage() {
         note: values.note,
       };
       let affectedRegId = values.registrationId;
+      let linkPaymentId: string | undefined;
       if (mode.kind === 'edit') {
         const prev = mode.payment;
         await repo.payments.update(prev.id, data);
         if (prev.registrationId !== values.registrationId) {
           await recomputeIsPaid(repo, prev.registrationId);
         }
+        linkPaymentId = prev.id;
       } else {
+        // Business rule: at most 2 payments per registration.
+        const existingCount = (
+          await repo.payments.list()
+        ).filter((p) => p.registrationId === values.registrationId).length;
+        if (existingCount >= 2) {
+          throw new Error(
+            'This registration already has 2 payments — the maximum allowed. Edit an existing one instead.',
+          );
+        }
         const p = await repo.payments.create(data);
         affectedRegId = p.registrationId;
+        linkPaymentId = p.id;
+      }
+      // Link the payment to the chosen planned installment (if any) so the
+      // plan's paid/unpaid state stays in sync with the ledger.
+      if (values.installmentIndex !== undefined && linkPaymentId) {
+        const reg = await repo.registrations.get(values.registrationId);
+        if (reg?.installments) {
+          const updated = reg.installments.map((inst, idx) =>
+            idx === values.installmentIndex
+              ? { ...inst, paymentId: linkPaymentId }
+              : inst,
+          );
+          await repo.registrations.update(reg.id, { installments: updated });
+        }
       }
       await recomputeIsPaid(repo, affectedRegId);
       setMode({ kind: 'closed' });
       setNotice('Payment saved.');
       await load();
     } catch (err) {
-      setError((err as Error).message);
+      setError(reportError(err, 'PaymentsPage'));
     } finally {
       setBusy(false);
     }
@@ -109,7 +135,7 @@ export function PaymentsPage() {
       setNotice('Payment removed.');
       await load();
     } catch (err) {
-      setError((err as Error).message);
+      setError(reportError(err, 'PaymentsPage'));
     } finally {
       setBusy(false);
     }
@@ -119,8 +145,8 @@ export function PaymentsPage() {
     <div>
       <div className="flex items-center justify-between gap-4 flex-wrap">
         <div>
-          <h1 className="text-2xl font-semibold text-slate-900 dark:text-slate-100">Payments</h1>
-          <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">
+          <h1 className="text-2xl font-semibold text-slate-900">Payments</h1>
+          <p className="mt-1 text-sm text-slate-600">
             {rows === null ? 'Loading…' : `${rows.length} payment${rows.length === 1 ? '' : 's'}`}
           </p>
         </div>
@@ -130,7 +156,7 @@ export function PaymentsPage() {
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search student, course, note"
-            className="rounded-md border border-slate-300 bg-white px-3 py-2 text-sm shadow-sm placeholder:text-slate-400 focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 w-64"
+            className="rounded-md border border-slate-300 bg-white px-3 py-2 text-sm shadow-sm placeholder:text-slate-400 focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500 w-64"
           />
           <Button
             onClick={() => setMode({ kind: 'create' })}
@@ -142,19 +168,19 @@ export function PaymentsPage() {
       </div>
 
       {error && (
-        <div className="mt-4 rounded-md border border-red-300 bg-red-50 px-3 py-2 text-sm text-red-700 dark:border-red-900 dark:bg-red-950/40 dark:text-red-300">
+        <div className="mt-4 rounded-md border border-red-300 bg-red-50 px-3 py-2 text-sm text-red-700">
           {error}
         </div>
       )}
       {notice && !error && (
-        <div className="mt-4 rounded-md border border-brand-300 bg-brand-50 px-3 py-2 text-sm text-brand-800 dark:border-brand-900 dark:bg-brand-950/40 dark:text-brand-200">
+        <div className="mt-4 rounded-md border border-brand-300 bg-brand-50 px-3 py-2 text-sm text-brand-800">
           {notice}
         </div>
       )}
 
       <div className="mt-4">
         {rows === null ? (
-          <div className="rounded-lg border border-slate-200 dark:border-slate-800 p-10 text-center text-slate-500">
+          <div className="rounded-lg border border-slate-200 p-10 text-center text-slate-500">
             Loading payments…
           </div>
         ) : rows.length === 0 ? (

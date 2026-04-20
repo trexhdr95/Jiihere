@@ -5,22 +5,22 @@ const STATUSES: { value: AttendanceStatus; label: string; className: string }[] 
     value: 'present',
     label: 'Present',
     className:
-      'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300',
+      'bg-emerald-100 text-emerald-800',
   },
   {
     value: 'late',
     label: 'Late',
-    className: 'bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300',
+    className: 'bg-amber-100 text-amber-800',
   },
   {
     value: 'absent',
     label: 'Absent',
-    className: 'bg-red-100 text-red-800 dark:bg-red-900/40 dark:text-red-300',
+    className: 'bg-red-100 text-red-800',
   },
   {
     value: 'excused',
     label: 'Excused',
-    className: 'bg-slate-200 text-slate-700 dark:bg-slate-800 dark:text-slate-300',
+    className: 'bg-slate-200 text-slate-700',
   },
 ];
 
@@ -47,7 +47,7 @@ export function AttendanceList({
     );
   }
   return (
-    <ul className="divide-y divide-slate-200 dark:divide-slate-800 rounded-md border border-slate-200 dark:border-slate-800">
+    <ul className="divide-y divide-slate-200 rounded-md border border-slate-200">
       {students.map((s) => {
         const current = attendanceByStudent.get(s.id);
         return (
@@ -69,7 +69,7 @@ export function AttendanceList({
                     className={`rounded-full px-2 py-0.5 text-xs font-medium border transition ${
                       active
                         ? `${opt.className} border-transparent`
-                        : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800'
+                        : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'
                     } disabled:opacity-50`}
                   >
                     {opt.label}
@@ -80,7 +80,7 @@ export function AttendanceList({
                 <button
                   disabled={disabled}
                   onClick={() => onClear(s.id)}
-                  className="text-xs text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 px-1 disabled:opacity-50"
+                  className="text-xs text-slate-500 hover:text-slate-700 px-1 disabled:opacity-50"
                   aria-label="Clear attendance"
                   title="Clear attendance"
                 >

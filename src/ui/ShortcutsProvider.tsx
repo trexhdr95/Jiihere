@@ -20,6 +20,8 @@ export function ShortcutsProvider({ children }: { children: React.ReactNode }) {
       { keys: 'g r', group: 'Navigation', description: 'Go to Registrations', handler: () => navigate('/registrations') },
       { keys: 'g p', group: 'Navigation', description: 'Go to Payments', handler: () => navigate('/payments') },
       { keys: 'g k', group: 'Navigation', description: 'Go to Schedule', handler: () => navigate('/schedule') },
+      { keys: 'g f', group: 'Navigation', description: 'Go to Financial', handler: () => navigate('/financial') },
+      { keys: 'g n', group: 'Navigation', description: 'Go to Notifications', handler: () => navigate('/notifications') },
       {
         keys: 'n',
         group: 'Actions',

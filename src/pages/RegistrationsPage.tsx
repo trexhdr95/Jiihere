@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useRepo } from '@/data/RepoContext';
-import type { Course, Registration, Student } from '@/domain/types';
+import type { Course, InstallmentPlan, PaymentMethod, Registration, Student } from '@/domain/types';
 import {
   listRegistrationViews,
   recomputeIsPaid,
@@ -14,6 +14,7 @@ import { ConfirmDialog } from '@/ui/primitives/ConfirmDialog';
 import { EmptyState } from '@/ui/primitives/EmptyState';
 import { Modal } from '@/ui/primitives/Modal';
 import { useNewShortcut } from '@/ui/ShortcutsProvider';
+import { reportError } from '@/lib/errors';
 import { formatDate, formatMoney } from '@/lib/format';
 
 type Mode =
@@ -86,18 +87,102 @@ export function RegistrationsPage() {
         });
         await recomputeIsPaid(repo, mode.registration.id);
       } else {
+        const course = courses.find((c) => c.id === values.courseId);
+
+        // Build the installment plan + optional legacy due date based on the
+        // chosen mode, then create the registration in one shot.
+        let installments: InstallmentPlan[] | undefined;
+        let paymentDueDate: string | undefined;
+        if (values.paymentMode === 'two_installments' && course) {
+          installments = [
+            {
+              label: '1st',
+              amount: Number(values.firstAmount ?? 0),
+              currency: course.price.currency,
+              dueDate: values.firstPaidNow ? undefined : values.firstDueDate,
+            },
+            {
+              label: '2nd',
+              amount: Number(values.secondAmount ?? 0),
+              currency: course.price.currency,
+              dueDate: values.secondPaidNow ? undefined : values.secondDueDate,
+            },
+          ];
+        } else if (values.paymentMode === 'single_later' && course) {
+          installments = [
+            {
+              amount: course.price.amount,
+              currency: course.price.currency,
+              dueDate: values.paymentDueDate ?? '',
+            },
+          ];
+          paymentDueDate = values.paymentDueDate;
+        }
+
         const reg = await repo.registrations.create({
           studentId: values.studentId,
           courseId: values.courseId,
           registrationDate: values.registrationDate,
-          isPaid: false,
+          isPaid: false, // recomputed after any payment below
+          paymentDueDate,
+          installments,
         });
+
+        // Paid-in-full → create one Payment for the full amount.
+        if (values.paymentMode === 'paid_full' && values.paymentMethod && course) {
+          await repo.payments.create({
+            registrationId: reg.id,
+            amount: course.price,
+            method: values.paymentMethod,
+            status: 'paid',
+            paidAt: values.registrationDate,
+            note: 'Paid on enrolment',
+          });
+        }
+
+        // Two-installments → for each installment flagged "paid now", create
+        // a Payment record and link it to that installment's paymentId so the
+        // plan's paid/unpaid state stays in sync with the payment ledger.
+        if (values.paymentMode === 'two_installments' && installments && course) {
+          let updatedPlan = installments;
+          const settlements: Array<{ idx: 0 | 1; method: PaymentMethod; amount: number }> = [];
+          if (values.firstPaidNow && values.firstMethod) {
+            settlements.push({
+              idx: 0,
+              method: values.firstMethod,
+              amount: Number(values.firstAmount ?? 0),
+            });
+          }
+          if (values.secondPaidNow && values.secondMethod) {
+            settlements.push({
+              idx: 1,
+              method: values.secondMethod,
+              amount: Number(values.secondAmount ?? 0),
+            });
+          }
+          for (const s of settlements) {
+            const payment = await repo.payments.create({
+              registrationId: reg.id,
+              amount: { amount: s.amount, currency: course.price.currency },
+              method: s.method,
+              status: 'paid',
+              paidAt: values.registrationDate,
+              note: `${s.idx === 0 ? '1st' : '2nd'} installment paid on enrolment`,
+            });
+            updatedPlan = updatedPlan.map((inst, i) =>
+              i === s.idx ? { ...inst, paymentId: payment.id } : inst,
+            );
+          }
+          if (settlements.length > 0) {
+            await repo.registrations.update(reg.id, { installments: updatedPlan });
+          }
+        }
         await recomputeIsPaid(repo, reg.id);
       }
       setMode({ kind: 'closed' });
       await load();
     } catch (err) {
-      setError((err as Error).message);
+      setError(reportError(err, 'RegistrationsPage'));
     } finally {
       setBusy(false);
     }
@@ -118,7 +203,7 @@ export function RegistrationsPage() {
       setNotice('Registration removed.');
       await load();
     } catch (err) {
-      setError((err as Error).message);
+      setError(reportError(err, 'RegistrationsPage'));
     } finally {
       setBusy(false);
     }
@@ -129,7 +214,16 @@ export function RegistrationsPage() {
     setError(null);
     setNotice(null);
     try {
-      await repo.payments.create({
+      // Business rule: at most 2 payments per registration (deposit + balance).
+      const existingCount = (
+        await repo.payments.list()
+      ).filter((p) => p.registrationId === values.registrationId).length;
+      if (existingCount >= 2) {
+        throw new Error(
+          'This registration already has 2 payments — the maximum allowed. Edit an existing one instead.',
+        );
+      }
+      const createdPayment = await repo.payments.create({
         registrationId: values.registrationId,
         amount: { amount: values.amount, currency: values.currency },
         method: values.method,
@@ -137,12 +231,26 @@ export function RegistrationsPage() {
         paidAt: values.paidAt,
         note: values.note,
       });
+      // If the payment is tagged to a planned installment, link it on the
+      // registration so overdue/due-soon tracking can see which installments
+      // are settled vs outstanding.
+      if (values.installmentIndex !== undefined) {
+        const reg = await repo.registrations.get(values.registrationId);
+        if (reg?.installments) {
+          const updated = reg.installments.map((inst, idx) =>
+            idx === values.installmentIndex
+              ? { ...inst, paymentId: createdPayment.id }
+              : inst,
+          );
+          await repo.registrations.update(reg.id, { installments: updated });
+        }
+      }
       await recomputeIsPaid(repo, values.registrationId);
       setPaymentMode({ kind: 'closed' });
       setNotice('Payment recorded.');
       await load();
     } catch (err) {
-      setError((err as Error).message);
+      setError(reportError(err, 'RegistrationsPage'));
     } finally {
       setBusy(false);
     }
@@ -152,17 +260,17 @@ export function RegistrationsPage() {
     <div>
       <div className="flex items-center justify-between gap-4 flex-wrap">
         <div>
-          <h1 className="text-2xl font-semibold text-slate-900 dark:text-slate-100">
+          <h1 className="text-2xl font-semibold text-slate-900">
             Registrations
           </h1>
-          <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">
+          <p className="mt-1 text-sm text-slate-600">
             {rows === null
               ? 'Loading…'
               : `${rows.length} total · ${rows.filter((r) => !r.registration.isPaid).length} unpaid`}
           </p>
         </div>
         <div className="flex items-center gap-2">
-          <div className="inline-flex rounded-md border border-slate-200 dark:border-slate-700 p-0.5 bg-white dark:bg-slate-900">
+          <div className="inline-flex rounded-md border border-slate-200 p-0.5 bg-white">
             {(['all', 'unpaid', 'paid'] as const).map((f) => (
               <button
                 key={f}
@@ -170,7 +278,7 @@ export function RegistrationsPage() {
                 className={`px-3 py-1 text-xs font-medium rounded ${
                   filter === f
                     ? 'bg-brand-600 text-white'
-                    : 'text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800'
+                    : 'text-slate-600 hover:bg-slate-100'
                 }`}
               >
                 {f[0].toUpperCase() + f.slice(1)}
@@ -182,19 +290,19 @@ export function RegistrationsPage() {
       </div>
 
       {error && (
-        <div className="mt-4 rounded-md border border-red-300 bg-red-50 px-3 py-2 text-sm text-red-700 dark:border-red-900 dark:bg-red-950/40 dark:text-red-300">
+        <div className="mt-4 rounded-md border border-red-300 bg-red-50 px-3 py-2 text-sm text-red-700">
           {error}
         </div>
       )}
       {notice && !error && (
-        <div className="mt-4 rounded-md border border-brand-300 bg-brand-50 px-3 py-2 text-sm text-brand-800 dark:border-brand-900 dark:bg-brand-950/40 dark:text-brand-200">
+        <div className="mt-4 rounded-md border border-brand-300 bg-brand-50 px-3 py-2 text-sm text-brand-800">
           {notice}
         </div>
       )}
 
       <div className="mt-4">
         {rows === null ? (
-          <div className="rounded-lg border border-slate-200 dark:border-slate-800 p-10 text-center text-slate-500">
+          <div className="rounded-lg border border-slate-200 p-10 text-center text-slate-500">
             Loading registrations…
           </div>
         ) : rows.length === 0 ? (
@@ -272,7 +380,7 @@ export function RegistrationsPage() {
             {viewMode.view.payments.length === 0 ? (
               <div className="text-sm text-slate-500">No payments recorded yet.</div>
             ) : (
-              <ul className="divide-y divide-slate-200 dark:divide-slate-800 rounded-md border border-slate-200 dark:border-slate-800">
+              <ul className="divide-y divide-slate-200 rounded-md border border-slate-200">
                 {viewMode.view.payments
                   .slice()
                   .sort((a, b) => b.paidAt.localeCompare(a.paidAt))
@@ -289,7 +397,7 @@ export function RegistrationsPage() {
                   ))}
               </ul>
             )}
-            <div className="pt-2 text-sm text-slate-600 dark:text-slate-400">
+            <div className="pt-2 text-sm text-slate-600">
               Paid: <b>{formatMoney(viewMode.view.paidTotal)}</b>
               {viewMode.view.course && (
                 <>

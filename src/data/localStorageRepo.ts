@@ -17,18 +17,44 @@ function uid(): string {
   return `id-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
 }
 
+// One-shot flag per key so a corrupted-load warning doesn't spam the console
+// when every repo operation re-reads the same key.
+const corruptionWarned = new Set<string>();
+
 function loadKey<T>(key: string): T[] {
   const raw = localStorage.getItem(STORAGE_PREFIX + key);
   if (!raw) return [];
   try {
     return JSON.parse(raw) as T[];
-  } catch {
+  } catch (err) {
+    // Previously: silently returned [] and the user saw zero rows. Now we at
+    // least log it so a developer can discover the corruption. The repo still
+    // returns [] so the app doesn't crash — UI layer can detect and surface.
+    if (!corruptionWarned.has(key)) {
+      corruptionWarned.add(key);
+      console.error(`[localStorageRepo] Corrupted JSON in "${STORAGE_PREFIX + key}"; treating as empty.`, err);
+    }
     return [];
   }
 }
 
 function saveKey<T>(key: string, rows: T[]): void {
-  localStorage.setItem(STORAGE_PREFIX + key, JSON.stringify(rows));
+  try {
+    localStorage.setItem(STORAGE_PREFIX + key, JSON.stringify(rows));
+  } catch (err) {
+    // Surface quota errors with a clearer message than the raw DOMException,
+    // so pages' generic catch handlers render something actionable.
+    const name = (err as { name?: string })?.name;
+    if (
+      name === 'QuotaExceededError' ||
+      name === 'NS_ERROR_DOM_QUOTA_REACHED'
+    ) {
+      throw new Error(
+        'Local storage is full. Export a backup, then use Reset all to free space.',
+      );
+    }
+    throw err;
+  }
 }
 
 function makeEntityRepo<T extends { id: string; createdAt: string }>(

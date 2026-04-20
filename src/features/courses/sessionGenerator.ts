@@ -30,22 +30,32 @@ export interface PlannedSession {
 }
 
 export function planSessions(course: Pick<Course, 'startDate' | 'endDate' | 'days' | 'startTime' | 'defaultDurationMin'>): PlannedSession[] {
-  const start = parseLocalDate(course.startDate);
-  const end = parseLocalDate(course.endDate);
-  if (end < start) return [];
+  // Iterate purely in UTC. DST only affects local time-of-day, not calendar dates,
+  // and day-of-week is the same for a given Y-M-D everywhere — so UTC math is
+  // safe for planning by calendar-day-of-week while staying DST-invariant.
+  // Previously: setDate()-based iteration in local time drifted across midnight
+  // DST transitions (e.g. Asia/Beirut), silently dropping one session per year.
+  const [sy, sm, sd] = course.startDate.split('-').map(Number);
+  const [ey, em, ed] = course.endDate.split('-').map(Number);
+  const startUtc = Date.UTC(sy, (sm ?? 1) - 1, sd ?? 1);
+  const endUtc = Date.UTC(ey, (em ?? 1) - 1, ed ?? 1);
+  if (endUtc < startUtc) return [];
 
   const wanted = new Set(course.days.map((d) => DAY_INDEX[d]));
   const out: PlannedSession[] = [];
-  const cur = new Date(start);
-  while (cur <= end) {
-    if (wanted.has(cur.getDay())) {
+  const MS_PER_DAY = 86_400_000;
+  for (let t = startUtc; t <= endUtc; t += MS_PER_DAY) {
+    const cur = new Date(t);
+    if (wanted.has(cur.getUTCDay())) {
+      const y = cur.getUTCFullYear();
+      const m = String(cur.getUTCMonth() + 1).padStart(2, '0');
+      const d = String(cur.getUTCDate()).padStart(2, '0');
       out.push({
-        date: formatLocalDate(cur),
+        date: `${y}-${m}-${d}`,
         startTime: course.startTime,
         durationMin: course.defaultDurationMin,
       });
     }
-    cur.setDate(cur.getDate() + 1);
   }
   return out;
 }

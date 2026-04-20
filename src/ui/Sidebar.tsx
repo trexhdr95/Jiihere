@@ -1,5 +1,6 @@
 import { useEffect } from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
+import { BrandMark } from './BrandMark';
 
 const NAV = [
   { to: '/', label: 'Dashboard', end: true, keys: 'g d' },
@@ -8,6 +9,7 @@ const NAV = [
   { to: '/registrations', label: 'Registrations', keys: 'g r' },
   { to: '/payments', label: 'Payments', keys: 'g p' },
   { to: '/schedule', label: 'Schedule', keys: 'g k' },
+  { to: '/financial', label: 'Financial', keys: 'g f' },
 ];
 
 export interface SidebarProps {
@@ -25,47 +27,64 @@ export function Sidebar({ mobileOpen, onCloseMobile }: SidebarProps) {
 
   const panel = (
     <>
-      <div className="h-14 flex items-center px-5 font-semibold text-brand-600">
-        Teacher's Dashboard
+      <div className="flex items-center gap-3 px-5 pt-5 pb-4 border-b border-brand-800/40">
+        <BrandMark size={48} onDark />
+        <div className="leading-tight">
+          <div className="font-semibold text-white tracking-wide">Jiihere</div>
+          <div className="text-[11px] text-accent-300/90">English courses</div>
+        </div>
       </div>
-      <nav className="flex-1 px-3 py-2 space-y-1">
+      <nav className="flex-1 px-3 py-3 space-y-1">
         {NAV.map((item) => (
           <NavLink
             key={item.to}
             to={item.to}
             end={item.end}
             className={({ isActive }) =>
-              `flex items-center justify-between rounded-md px-3 py-2 text-sm font-medium transition ${
+              `relative flex items-center justify-between rounded-md px-3 py-2 text-sm font-medium transition ${
                 isActive
-                  ? 'bg-brand-50 text-brand-700 dark:bg-brand-900/40 dark:text-brand-200'
-                  : 'text-slate-700 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800'
+                  ? 'bg-white text-brand-900 shadow-sm'
+                  : 'text-brand-100 hover:bg-brand-800/50'
               }`
             }
           >
-            <span>{item.label}</span>
-            <span className="text-[10px] font-mono text-slate-400 dark:text-slate-500">
-              {item.keys}
-            </span>
+            {({ isActive }) => (
+              <>
+                {isActive && (
+                  <span
+                    aria-hidden="true"
+                    className="absolute left-0 top-1.5 bottom-1.5 w-1 rounded-r bg-accent-400"
+                  />
+                )}
+                <span>{item.label}</span>
+                <span className="text-[10px] font-mono opacity-60">
+                  {item.keys}
+                </span>
+              </>
+            )}
           </NavLink>
         ))}
       </nav>
+      <div className="px-5 py-4 text-[11px] text-brand-200/70 border-t border-brand-800/40">
+        Press <kbd className="rounded bg-brand-800/60 px-1 py-0.5 font-mono text-[10px]">?</kbd> for shortcuts
+      </div>
     </>
   );
 
   return (
     <>
-      <aside className="hidden md:flex md:w-60 md:flex-col border-r border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900">
+      <aside className="hidden xl:flex xl:w-60 xl:flex-col bg-brand-900">
         {panel}
       </aside>
 
       {mobileOpen && (
-        <div className="md:hidden fixed inset-0 z-40">
+        <div className="xl:hidden fixed inset-0 z-40">
           <div
             className="absolute inset-0 bg-slate-950/60"
             onClick={onCloseMobile}
             aria-hidden="true"
           />
-          <aside className="absolute left-0 top-0 h-full w-60 flex flex-col border-r border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-xl">
+          <aside className="absolute left-0 top-0 h-full w-60 flex flex-col bg-brand-900 shadow-xl">
             {panel}
           </aside>
         </div>
