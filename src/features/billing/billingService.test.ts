@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it } from 'vitest';
-import { createLocalStorageRepo } from '@/data/localStorageRepo';
+import { createInMemoryRepo } from '@/data/inMemoryRepo';
 import type { Course, Payment } from '@/domain/types';
 import { computeIsPaid, recomputeIsPaid, sumPayments } from './billingService';
 
@@ -89,7 +89,7 @@ describe('recomputeIsPaid (integration with localStorage repo)', () => {
   });
 
   it('flips isPaid to true when payments cover the price', async () => {
-    const repo = createLocalStorageRepo();
+    const repo = createInMemoryRepo();
     const course = await repo.courses.create(makeCourse() as Omit<Course, 'id' | 'createdAt'>);
     const registration = await repo.registrations.create({
       studentId: 'stu1',
@@ -109,7 +109,7 @@ describe('recomputeIsPaid (integration with localStorage repo)', () => {
   });
 
   it('flips isPaid back to false when a payment is removed', async () => {
-    const repo = createLocalStorageRepo();
+    const repo = createInMemoryRepo();
     const course = await repo.courses.create(makeCourse() as Omit<Course, 'id' | 'createdAt'>);
     const registration = await repo.registrations.create({
       studentId: 'stu1',
@@ -131,7 +131,7 @@ describe('recomputeIsPaid (integration with localStorage repo)', () => {
   });
 
   it('returns undefined for unknown registrations', async () => {
-    const repo = createLocalStorageRepo();
+    const repo = createInMemoryRepo();
     expect(await recomputeIsPaid(repo, 'missing')).toBeUndefined();
   });
 });

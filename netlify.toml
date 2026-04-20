@@ -1,0 +1,13 @@
+[build]
+  command = "npm run build"
+  publish = "dist"
+
+# SPA fallback: every request (including /students, /financial, etc.)
+# returns index.html so react-router can take over on the client.
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
+
+# BASE_PATH was only needed for GitHub Pages subpath deployment. Netlify
+# serves at the domain root, so leave it unset → vite.config.ts uses '/'.

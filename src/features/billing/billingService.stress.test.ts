@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it } from 'vitest';
-import { createLocalStorageRepo } from '@/data/localStorageRepo';
+import { createInMemoryRepo } from '@/data/inMemoryRepo';
 import type { Course, Payment } from '@/domain/types';
 import {
   computeIsPaid,
@@ -131,7 +131,7 @@ describe('recomputeIsPaid — integration edge cases', () => {
   });
 
   it('handles a payment whose registration no longer exists', async () => {
-    const repo = createLocalStorageRepo();
+    const repo = createInMemoryRepo();
     // create a payment pointing to a missing registration — repo allows it
     await repo.payments.create({
       registrationId: 'missing',
@@ -144,7 +144,7 @@ describe('recomputeIsPaid — integration edge cases', () => {
   });
 
   it('handles a registration pointing to a missing course gracefully', async () => {
-    const repo = createLocalStorageRepo();
+    const repo = createInMemoryRepo();
     const reg = await repo.registrations.create({
       studentId: 's1',
       courseId: 'orphan',
@@ -157,7 +157,7 @@ describe('recomputeIsPaid — integration edge cases', () => {
   });
 
   it('flips back to unpaid after a refund edit', async () => {
-    const repo = createLocalStorageRepo();
+    const repo = createInMemoryRepo();
     const course = await repo.courses.create(makeCourse() as Omit<Course, 'id' | 'createdAt'>);
     const reg = await repo.registrations.create({
       studentId: 's1',

@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it } from 'vitest';
-import { createLocalStorageRepo } from '@/data/localStorageRepo';
+import { createInMemoryRepo } from '@/data/inMemoryRepo';
 import type { Course } from '@/domain/types';
 import {
   applyCourseSessions,
@@ -28,7 +28,7 @@ describe('applyCourseSessions — course edits propagate time/duration', () => {
   beforeEach(() => localStorage.clear());
 
   it('updates kept sessions when start time changes', async () => {
-    const repo = createLocalStorageRepo();
+    const repo = createInMemoryRepo();
     const course = await repo.courses.create(makeCourseInput());
     await applyCourseSessions(repo, course);
     const updated = await repo.courses.update(course.id, { startTime: '18:30' });
@@ -40,7 +40,7 @@ describe('applyCourseSessions — course edits propagate time/duration', () => {
   });
 
   it('updates kept sessions when duration changes', async () => {
-    const repo = createLocalStorageRepo();
+    const repo = createInMemoryRepo();
     const course = await repo.courses.create(makeCourseInput());
     await applyCourseSessions(repo, course);
     const updated = await repo.courses.update(course.id, { defaultDurationMin: 90 });
@@ -51,7 +51,7 @@ describe('applyCourseSessions — course edits propagate time/duration', () => {
   });
 
   it('does not corrupt session ids on regeneration', async () => {
-    const repo = createLocalStorageRepo();
+    const repo = createInMemoryRepo();
     const course = await repo.courses.create(makeCourseInput());
     await applyCourseSessions(repo, course);
     const firstIds = (await repo.sessions.list()).map((s) => s.id).sort();
@@ -65,7 +65,7 @@ describe('cascadeDeleteCourse — referential integrity', () => {
   beforeEach(() => localStorage.clear());
 
   it('removes every dependent row', async () => {
-    const repo = createLocalStorageRepo();
+    const repo = createInMemoryRepo();
     const course = await repo.courses.create(makeCourseInput());
     await applyCourseSessions(repo, course);
 
@@ -105,7 +105,7 @@ describe('cascadeDeleteCourse — referential integrity', () => {
   });
 
   it('leaves other courses untouched', async () => {
-    const repo = createLocalStorageRepo();
+    const repo = createInMemoryRepo();
     const victim = await repo.courses.create(makeCourseInput({ name: 'Victim' }));
     const survivor = await repo.courses.create(makeCourseInput({ name: 'Survivor' }));
     await applyCourseSessions(repo, victim);

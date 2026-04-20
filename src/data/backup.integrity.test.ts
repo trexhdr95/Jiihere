@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it } from 'vitest';
-import { createLocalStorageRepo } from './localStorageRepo';
+import { createInMemoryRepo } from './inMemoryRepo';
 import { applyBackup, BACKUP_VERSION, buildBackup, validateBackup } from './backup';
 import { validateBackupIntegrity, type IntegrityIssue } from './backupIntegrity';
 
@@ -59,7 +59,7 @@ describe('backup foreign-key integrity', () => {
   });
 
   it('reports a clean bill on round-tripped data', async () => {
-    const repo = createLocalStorageRepo();
+    const repo = createInMemoryRepo();
     const course = await repo.courses.create({
       name: 'x',
       type: 'group',
@@ -87,7 +87,7 @@ describe('backup foreign-key integrity', () => {
     // REFERENCES. This test documents the boundary: a row that is well-formed
     // but references a non-existent FK passes validateBackup and imports, so
     // the UI can surface the integrity issues to the user separately.
-    const repo = createLocalStorageRepo();
+    const repo = createInMemoryRepo();
     const raw = validateBackup({
       version: BACKUP_VERSION,
       data: {

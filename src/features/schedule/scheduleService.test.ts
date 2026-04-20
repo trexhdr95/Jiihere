@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { Session } from '@/domain/types';
-import { createLocalStorageRepo } from '@/data/localStorageRepo';
+import { createInMemoryRepo } from '@/data/inMemoryRepo';
 import { findSessionConflicts, rescheduleSession } from './scheduleService';
 
 function sessionStub(overrides: Partial<Session>): Session {
@@ -85,7 +85,7 @@ describe('findSessionConflicts', () => {
 });
 
 async function seedSession() {
-  const repo = createLocalStorageRepo();
+  const repo = createInMemoryRepo();
   const course = await repo.courses.create({
     name: 'Test',
     type: 'group',
