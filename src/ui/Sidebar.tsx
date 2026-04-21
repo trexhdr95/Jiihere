@@ -1,8 +1,16 @@
-import { useEffect } from 'react';
+import { useEffect, useMemo } from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
+import { useAuth } from '@/data/authContext';
 import { BrandMark } from './BrandMark';
 
-const NAV = [
+interface NavItem {
+  to: string;
+  label: string;
+  keys: string;
+  end?: boolean;
+}
+
+const BASE_NAV: NavItem[] = [
   { to: '/', label: 'Dashboard', end: true, keys: 'g d' },
   { to: '/students', label: 'Students', keys: 'g s' },
   { to: '/courses', label: 'Courses', keys: 'g c' },
@@ -12,6 +20,8 @@ const NAV = [
   { to: '/financial', label: 'Financial', keys: 'g f' },
 ];
 
+const ADMIN_ENTRY: NavItem = { to: '/admin', label: 'Admin', keys: 'g a' };
+
 export interface SidebarProps {
   mobileOpen: boolean;
   onCloseMobile: () => void;
@@ -19,6 +29,14 @@ export interface SidebarProps {
 
 export function Sidebar({ mobileOpen, onCloseMobile }: SidebarProps) {
   const location = useLocation();
+  const { profile } = useAuth();
+
+  // Nav is filtered at render time so non-admins never see the Admin link.
+  // The route itself also guards on isAdmin — belt-and-braces.
+  const nav = useMemo(
+    () => (profile?.isAdmin ? [...BASE_NAV, ADMIN_ENTRY] : BASE_NAV),
+    [profile?.isAdmin],
+  );
 
   useEffect(() => {
     onCloseMobile();
@@ -35,7 +53,7 @@ export function Sidebar({ mobileOpen, onCloseMobile }: SidebarProps) {
         </div>
       </div>
       <nav className="flex-1 px-3 py-3 space-y-1">
-        {NAV.map((item) => (
+        {nav.map((item) => (
           <NavLink
             key={item.to}
             to={item.to}

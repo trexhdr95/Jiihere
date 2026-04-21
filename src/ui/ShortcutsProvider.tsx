@@ -22,6 +22,7 @@ export function ShortcutsProvider({ children }: { children: React.ReactNode }) {
       { keys: 'g k', group: 'Navigation', description: 'Go to Schedule', handler: () => navigate('/schedule') },
       { keys: 'g f', group: 'Navigation', description: 'Go to Financial', handler: () => navigate('/financial') },
       { keys: 'g n', group: 'Navigation', description: 'Go to Notifications', handler: () => navigate('/notifications') },
+      { keys: 'g a', group: 'Navigation', description: 'Go to Admin (admin only)', handler: () => navigate('/admin') },
       {
         keys: 'n',
         group: 'Actions',
