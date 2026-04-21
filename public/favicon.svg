@@ -1,0 +1,39 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 96" width="32" height="32">
+  <!-- Simplified Jiihere brand mark for favicon use.
+       Mirrors src/ui/BrandMark.tsx but dropped the per-leaf laurel detail
+       (invisible at 16 px) in favour of a clean gold backing ring + cap. -->
+
+  <!-- Gold laurel ring — a soft oval behind the shield so the shape
+       reads as "crest" even when tiny. -->
+  <ellipse cx="40" cy="54" rx="34" ry="38" fill="#d4af37" opacity="0.85"/>
+  <ellipse cx="40" cy="54" rx="30" ry="34" fill="#ffffff"/>
+
+  <!-- Shield -->
+  <path
+    d="M22 28 L58 28 Q62 28 62 32 L62 58 Q62 72 40 82 Q18 72 18 58 L18 32 Q18 28 22 28 Z"
+    fill="#172554"
+    stroke="#d4af37"
+    stroke-width="1.5"
+  />
+
+  <!-- Serif J -->
+  <text
+    x="40" y="62"
+    text-anchor="middle"
+    fill="#ffffff"
+    font-family="Georgia, 'Times New Roman', serif"
+    font-size="34"
+    font-weight="700"
+  >J</text>
+
+  <!-- Graduation cap -->
+  <g fill="#0b1730">
+    <polygon points="40,4 18,12 40,20 62,12"/>
+    <path d="M30 14 L30 22 Q30 26 40 26 Q50 26 50 22 L50 14 L40 18 Z"/>
+  </g>
+  <!-- Gold tassel -->
+  <g stroke="#d4af37" stroke-width="2" fill="#d4af37" stroke-linecap="round">
+    <line x1="58" y1="12" x2="58" y2="22"/>
+    <circle cx="58" cy="24" r="2" stroke-width="0"/>
+  </g>
+</svg>
